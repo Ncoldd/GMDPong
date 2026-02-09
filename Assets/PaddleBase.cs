@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PaddleBase : MonoBehaviour
+public abstract class PaddleBase : MonoBehaviour
 {
     public float speed = 5f;       // Movement speed
     protected Rigidbody2D rb;      // Rigidbody reference
@@ -24,9 +24,6 @@ public class PaddleBase : MonoBehaviour
         rb.velocity = new Vector2(0, moveInput * speed);
     }
 
-    // Each paddle defines its own input keys
-    protected virtual float GetInput()
-    {
-        return Input.GetAxis("LeftPaddle");
-    }
+    protected abstract float GetInput();
+
 }
