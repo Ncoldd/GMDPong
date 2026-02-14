@@ -1,65 +1,38 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
-public class BallMovement : NetworkedObject, ICollidable
+public class BallMovement : NetworkBehaviour, ICollidable
 {
     private Rigidbody2D rb;
-    //engine accessible speed
     public float speed = 5f;
     private Vector2 direction = new Vector2(1, 1);
-
-    public override void Initialize()
-    {
-        
-    }
-
-    public override string GetNetworkId()
-    {
-        return "Ball_" + GetInstanceID();
-    }
-
-    public float Speed
-    {
-        get { return speed; }
-        set { speed = value; }
-    }
-
-    public Vector2 Direction
-    {
-        get { return direction; }
-        set { direction = value.normalized; } // Always keep normalized
-    }
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        rb.velocity = direction * speed; 
-        // initial velocity
+
+        if (IsServer)
+        {
+            rb.velocity = direction * speed;
+        }
     }
 
     void FixedUpdate()
     {
-        // updates move speed and direction
+        // Only the server controls the ball
+        if (!IsServer) return;
+
         rb.velocity = direction * speed;
     }
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-        ICollidable collidable = collision.gameObject.GetComponent<ICollidable>();
+        // Only the server handles collisions
+        if (!IsServer) return;
 
-        if (collidable != null)
-        {
-            collidable.OnHit(collision);
-        }
-
-        //ball reacts to what it hit
-        OnHit(collision);
-    }
-
-
-    public void OnHit(Collision2D collision)
-    {
+        // Reverse direction on collisions
         if (collision.gameObject.CompareTag("Paddle"))
         {
             direction.x = -direction.x;
@@ -77,5 +50,7 @@ public class BallMovement : NetworkedObject, ICollidable
         }
     }
 
+    public void OnHit(Collision2D collision)
+    {
+    }
 }
-
