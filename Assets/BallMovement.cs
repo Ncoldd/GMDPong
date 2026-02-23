@@ -42,11 +42,11 @@ public class BallMovement : NetworkBehaviour, ICollidable
         if (collision.gameObject.CompareTag("Paddle"))
         {
             direction.x = -direction.x;
-            float angle = Random.Range(0.7f, 0.7f);
+            float angle = Random.Range(-0.7f, 0.7f);
             direction.y += angle;
             direction = direction.normalized;
 
-            speed = Random.Range(5f, 8f);
+            speed = Random.Range(5f, 10f);
         }
 
         else if (collision.gameObject.CompareTag("Wall"))

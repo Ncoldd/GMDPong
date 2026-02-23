@@ -35,6 +35,35 @@ public class GameManager : NetworkBehaviour
         rightScore.OnValueChanged += OnScoreChanged;
 
         UpdateUI();
+
+        if (!IsServer) return;
+
+        NetworkManager.Singleton.OnClientConnectedCallback += AssignPaddles;
+    }
+
+    void AssignPaddles(ulong clientId)
+    {
+        PaddleBase[] paddles = FindObjectsOfType<PaddleBase>();
+        ulong hostId = NetworkManager.Singleton.LocalClientId;
+
+        foreach (PaddleBase paddle in paddles)
+        {
+            NetworkObject netObj = paddle.GetComponent<NetworkObject>();
+
+            if (paddle.transform.position.x < 0)
+            {
+                // LEFT - give to client 
+                if (clientId != hostId)
+                {
+                    netObj.ChangeOwnership(clientId);
+                }
+            }
+            else
+            {
+                // RIGHT - always host
+                netObj.ChangeOwnership(hostId);
+            }
+        }
     }
 
     void OnScoreChanged(int oldValue, int newValue)
@@ -51,7 +80,7 @@ public class GameManager : NetworkBehaviour
 
     [ServerRpc(RequireOwnership = false)]
     public void AddLeftScoreServerRpc()
-    {   //The !gameFinished.Value prevents this from running
+    {   //!gameFinished.Value prevents this from running
         if (IsServer && !gameFinished.Value)
         {
             leftScore.Value++;
@@ -62,13 +91,19 @@ public class GameManager : NetworkBehaviour
 
     [ServerRpc(RequireOwnership = false)]
     public void AddRightScoreServerRpc()
-    {   //The !gameFinished.Value prevents this from running
+    {   //!gameFinished.Value prevents this from running
         if (IsServer && !gameFinished.Value)
         { 
             rightScore.Value++;
             CheckWinCondition();
             ResetBall(Vector2.left); //goes towards the left player
         } 
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void StartNewGameServerRpc()
+    {
+        StartNewGame();
     }
 
     void CheckWinCondition()
@@ -100,7 +135,11 @@ public class GameManager : NetworkBehaviour
         //grabs its Rigidbody2D component
         Rigidbody2D rb = ball.GetComponent<Rigidbody2D>();
 
+        rb.velocity = Vector2.zero; //makes it stop permenantly
+        ball.direction = Vector2.zero;  //makes it stop permenantly
+
         ball.enabled = false;
+
         
         //PaddleBase paddle = FindObjectOfType<PaddleBase>();
         //Rigidbody2D rbp = paddle.GetComponent<Rigidbody2D>();
@@ -114,10 +153,7 @@ public class GameManager : NetworkBehaviour
         rightScore.Value = 0;
         leftScore.Value = 0;
         gameFinished.Value = false;
-        IsGameFinished();
-
-        gameUI gameUI = FindObjectOfType<gameUI>();
-        gameUI.winMessageText.gameObject.SetActive(false);
+        IsGameFinished();;
 
 
         BallMovement ball = FindObjectOfType<BallMovement>();
@@ -160,6 +196,9 @@ public class GameManager : NetworkBehaviour
 
         //resets pos to 0
         ball.transform.position = Vector2.zero;
+
+        //freeze pos to that 0
+        rb.velocity = Vector2.zero;
 
         ball.direction = direction;
     }

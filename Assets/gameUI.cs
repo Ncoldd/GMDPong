@@ -14,17 +14,18 @@ public class gameUI : NetworkBehaviour
 
 
     // Start is called before the first frame update
-    void Start()
+    void Start() //on start
     {
         gameManager = FindObjectOfType<GameManager>();
         winMessageText.gameObject.SetActive(false);
+        startButton.gameObject.SetActive(false);
 
         startButton.onClick.AddListener(OnStartButtonClicked);
     }
 
     void OnStartButtonClicked()
     {
-        gameManager.StartNewGame();
+        gameManager.StartNewGameServerRpc();
         startButton.gameObject.SetActive(false);
     }
 
@@ -34,16 +35,24 @@ public class gameUI : NetworkBehaviour
         gameManager.gameFinished.OnValueChanged += OnGameFinished;
     }
 
-    void OnGameFinished(bool oldValue, bool newValue)
+    void OnGameFinished(bool oldValue, bool newValue) //on end
     {
-        if (!newValue) return;
+        if (newValue)
+        {
+            //when it is a new value turn these on
+            winMessageText.gameObject.SetActive(true); //turned it back on
+            startButton.gameObject.SetActive(true); //turned it back on 
 
-        winMessageText.gameObject.SetActive(true);
-
-        if (gameManager.GetRightScore() >= gameManager.GetWinningScore())
-            winMessageText.text = "Right Paddle Wins!";
+            if (gameManager.GetRightScore() >= gameManager.GetWinningScore())
+                winMessageText.text = "Right Paddle Wins!";
+            else
+                winMessageText.text = "Left Paddle Wins!";
+        }
         else
-            winMessageText.text = "Left Paddle Wins!";
+        {
+            winMessageText.gameObject.SetActive(false);
+            startButton.gameObject.SetActive(false);
+        }
     }
 
 }

@@ -5,12 +5,13 @@ using UnityEngine;
 
 public abstract class PaddleBase : NetworkBehaviour
 {
-    public float speed = 5f;       // Movement speed
+    public float speed = 8f;       // Movement speed
     protected Rigidbody2D rb;      // Rigidbody reference
-    protected float moveInput;     // Current input
+    protected float moveInput;     // Current input  
 
-    private NetworkVariable<float> networkYPosition =
-        new NetworkVariable<float>(); // Sync Y position across the network
+    private NetworkVariable<float> networkYPosition = new NetworkVariable<float>(
+    writePerm: NetworkVariableWritePermission.Owner // allows the owning client to write
+    );
 
 
     protected virtual void Start()
