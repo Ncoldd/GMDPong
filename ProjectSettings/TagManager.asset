@@ -7,6 +7,9 @@ TagManager:
   - Paddle
   - Wall
   - SideWall
+  - LeftScoreZone
+  - RightScoreZone
+  - Ball
   layers:
   - Default
   - TransparentFX

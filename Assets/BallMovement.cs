@@ -1,14 +1,20 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
+using UnityEditor.Build.Content;
 using UnityEngine;
 
 public class BallMovement : NetworkBehaviour, ICollidable
 {
     private Rigidbody2D rb;
     public float speed = 5f;
-    private Vector2 direction = new Vector2(1, 1);
+    public Vector2 direction = new Vector2(1, 1);
 
+    public void ResetBall()
+    {
+        transform.position = Vector2.zero;
+        GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+    }
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -36,14 +42,18 @@ public class BallMovement : NetworkBehaviour, ICollidable
         if (collision.gameObject.CompareTag("Paddle"))
         {
             direction.x = -direction.x;
-            float angle = Random.Range(-0.2f, 0.2f);
+            float angle = Random.Range(0.7f, 0.7f);
             direction.y += angle;
             direction = direction.normalized;
+
+            speed = Random.Range(5f, 8f);
         }
+
         else if (collision.gameObject.CompareTag("Wall"))
         {
             direction.y = -direction.y;
         }
+
         else if (collision.gameObject.CompareTag("SideWall"))
         {
             direction.x = -direction.x;
@@ -52,5 +62,22 @@ public class BallMovement : NetworkBehaviour, ICollidable
 
     public void OnHit(Collision2D collision)
     {
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (!IsServer) return;
+
+        if (collision.CompareTag("LeftScoreZone"))
+        {
+            FindObjectOfType<GameManager>().AddRightScoreServerRpc();
+            ResetBall();
+        }
+        else if (collision.CompareTag("RightScoreZone"))
+        {
+            FindObjectOfType<GameManager>().AddLeftScoreServerRpc();
+            ResetBall();
+        }
+
     }
 }
